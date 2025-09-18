@@ -33,7 +33,10 @@ const Header = () => {
                 { name: 'About', href: '#about' },
                 { name: 'Features', href: '#features' },
                 { name: 'Why Us', href: '#problem' },
-                { name: 'Testimonials', href: '#testimonials' }
+                { name: 'Testimonials', href: '#testimonials' },
+                { name: 'Guides', href: '/guides' },
+                { name: 'Utility', href: '/utility-scale' },
+                { name: 'Solutions', href: '/commercial' }
               ].map((item) => (
                 <a
                   key={item.name}
