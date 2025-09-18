@@ -36,17 +36,34 @@ const Agricultural = () => {
     <div className="min-h-screen pt-16">
      
       
-      {/* Hero Section */}
-      <section className="bg-green-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-green-900 mb-4">Agricultural Solutions</h1>
-            <p className="text-xl text-green-700 max-w-3xl mx-auto">
-              Transform your agricultural operations with dual-axis solar tracking technology designed for farming applications
-            </p>
-          </div>
-        </div>
-      </section>
+{/* Hero Section with Video Background */}
+<section className="relative h-[80vh] flex items-center justify-center">
+  {/* Background Video */}
+  <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute inset-0 w-full h-full object-cover"
+  >
+    <source src="/duaaxis1.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  {/* Overlay (for darkening the video a bit) */}
+  <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+
+  {/* Content */}
+  <div className="relative z-10 text-center px-4">
+    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+      Agricultural Solutions
+    </h1>
+    <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto">
+      Transform your agricultural operations with dual-axis solar tracking technology designed for farming applications
+    </p>
+  </div>
+</section>
+
 
       {/* Features Section */}
       <section className="py-16">
