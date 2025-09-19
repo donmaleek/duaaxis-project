@@ -161,7 +161,7 @@ const Hero = () => {
       {/* Video Control */}
       <button 
         onClick={toggleVideoPlayback}
-        className="absolute bottom-6 right-6 z-20 bg-black/30 text-white p-3 rounded-full hover:bg-black/50 transition-colors backdrop-blur-sm"
+        className="absolute bottom-6 right-6 z-20 bg-black/5 text-white p-3 rounded-full hover:bg-black/50 transition-colors backdrop-blur-sm"
         aria-label={isPlaying ? "Pause video" : "Play video"}
       >
         {isPlaying ? (
