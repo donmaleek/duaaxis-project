@@ -1,0 +1,41 @@
+{
+  "/Users/salmaayman/Downloads/duaaxis-project/duaaxis-backend/serverless.yml": {
+    "versionFramework": "4.19.1",
+    "servicePath": "/Users/salmaayman/Downloads/duaaxis-project/duaaxis-backend/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "landing-backend",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1"
+      },
+      "functions": {
+        "app": {
+          "handler": "index.handler",
+          "events": [
+            {
+              "http": {
+                "path": "contact",
+                "method": "post"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1"
+    },
+    "serviceRawFile": "service: landing-backend\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n\nfunctions:\n  app:\n    handler: index.handler\n    events:\n      - http:\n          path: contact\n          method: post\n",
+    "command": [],
+    "options": {},
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

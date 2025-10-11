@@ -8,5 +8,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "deep-email-validator": "^0.1.21",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "nodemailer": "^7.0.6",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "serverless-offline": "^14.4.0"
+  }
 }
