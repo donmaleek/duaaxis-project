@@ -7,36 +7,138 @@ import ProblemSolution from '../sections/ProblemSolution';
 import Testimonials from '../sections/Testimonials';
 import Contact from '../sections/Contact';
 
-// Enhanced messaging system
-const MESSAGING_FEATURES = {
-  QUICK_CONTACT: 'quick_contact',
-  LIVE_CHAT: 'live_chat',
-  APPOINTMENT: 'appointment',
-  SUPPORT: 'support'
+// Enhanced AI response system
+const AI_RESPONSES = {
+  GREETINGS: {
+    patterns: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+    responses: [
+      "Hello! I'm Sarah, your solar energy consultant at DuaAxis. How can I help you today? 🌞",
+      "Hi there! Welcome to DuaAxis. I'm here to answer all your solar tracking questions!",
+      "Greetings! I'm Sarah from DuaAxis. Ready to explore how solar tracking can transform your energy production?"
+    ]
+  },
+  PRODUCT_INFO: {
+    patterns: ['product', 'tracker', 'system', 'technology', 'how it works', 'features'],
+    responses: [
+      "Our dual-axis solar trackers increase energy production by up to 45% compared to fixed systems! They automatically follow the sun's path throughout the day for maximum efficiency. ☀️",
+      "DuaAxis trackers use advanced AI algorithms to optimize sun positioning in real-time. Our systems feature weather adaptation, remote monitoring, and 25-year durability.",
+      "The magic is in our dual-axis design - it tracks both daily east-west movement and seasonal north-south changes. This ensures optimal angle year-round!"
+    ]
+  },
+  PRICING: {
+    patterns: ['price', 'cost', 'how much', 'investment', 'affordable'],
+    responses: [
+      "Our systems start at $15,000 for residential installations, with commercial solutions beginning at $50,000. Would you like a personalized quote? 💰",
+      "The investment varies based on your energy needs and location. On average, our customers see ROI within 3-5 years through energy savings!",
+      "We offer flexible financing options and can help you explore available solar incentives and tax credits in your area."
+    ]
+  },
+  INSTALLATION: {
+    patterns: ['install', 'setup', 'time', 'how long', 'process'],
+    responses: [
+      "Installation typically takes 2-4 days for residential systems. Our certified team handles everything from site assessment to grid connection! 🛠️",
+      "The process includes site evaluation, custom design, installation, and commissioning. We ensure minimal disruption to your operations.",
+      "Most commercial installations are completed within 2-3 weeks, depending on system size and site complexity."
+    ],
+  },
+  BENEFITS: {
+    patterns: ['benefit', 'advantage', 'why', 'better', 'efficiency'],
+    responses: [
+      "DuaAxis trackers boost energy production by 35-45%, reduce payback period by 2 years, and increase property value! 📈",
+      "Beyond higher efficiency, our systems provide reliable performance in various weather conditions and come with comprehensive monitoring.",
+      "You'll enjoy maximum energy harvest, reduced carbon footprint, and long-term energy cost stability with our advanced tracking technology."
+    ]
+  },
+  MAINTENANCE: {
+    patterns: ['maintenance', 'service', 'repair', 'warranty', 'support'],
+    responses: [
+      "Our systems require minimal maintenance - just semi-annual inspections. We offer 10-year comprehensive warranty with 24/7 remote monitoring! 🔧",
+      "DuaAxis provides proactive maintenance alerts and has service teams across major regions. Most issues can be resolved remotely through our monitoring system.",
+      "We offer tiered service packages from basic monitoring to full maintenance programs. All systems include 5 years of complimentary remote support."
+    ]
+  },
+  CONTACT: {
+    patterns: ['contact', 'speak', 'talk', 'meeting', 'consultation'],
+    responses: [
+      "I'd be happy to connect you with our solar experts! You can call us at +20 2 1234 5678 or schedule a consultation through our website. 📞",
+      "Our team is available Monday-Friday 8AM-6PM. Would you like me to schedule a callback with one of our energy consultants?",
+      "For immediate assistance, call our support line. For detailed project discussions, I recommend booking a virtual meeting with our engineering team."
+    ]
+  },
+  DEFAULT: {
+    responses: [
+      "That's an interesting question about solar energy! While I specialize in DuaAxis tracking systems, our human experts would be perfect for detailed discussions. Would you like me to connect you with a solar consultant?",
+      "I'm constantly learning about solar technology! For specific technical questions, our engineering team has the deepest expertise. Shall I arrange a consultation?",
+      "Great question! Our solar specialists have extensive experience with similar inquiries. I can have them contact you with a comprehensive answer."
+    ]
+  }
+};
+
+const CHAT_STATES = {
+  MINIMIZED: 'minimized',
+  OPEN: 'open',
+  MAXIMIZED: 'maximized'
 };
 
 const Home = () => {
   const [activeSection, setActiveSection] = useState('hero');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeMessaging, setActiveMessaging] = useState(null);
+  const [chatState, setChatState] = useState(CHAT_STATES.MINIMIZED);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isOnline, setIsOnline] = useState(true);
   const [systemNotification, setSystemNotification] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [userInput, setUserInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
   
-  // Cookie state management (from previous implementation)
-  const [cookieConsent, setCookieConsent] = useState(null);
-  const [showCookieBanner, setShowCookieBanner] = useState(false);
-  const [showCookieSettings, setShowCookieSettings] = useState(false);
-  const [cookiePreferences, setCookiePreferences] = useState({
-    NECESSARY: { id: 'necessary', name: 'Necessary Cookies', description: 'Essential for website functionality', required: true, enabled: true },
-    ANALYTICS: { id: 'analytics', name: 'Analytics Cookies', description: 'Help us understand visitor interactions', required: false, enabled: false },
-    MARKETING: { id: 'marketing', name: 'Marketing Cookies', description: 'Personalize ads and content', required: false, enabled: false },
-    PREFERENCES: { id: 'preferences', name: 'Preference Cookies', description: 'Remember your settings', required: false, enabled: false }
-  });
-
+  const chatContainerRef = useRef(null);
   const messagingTimeoutRef = useRef(null);
   const notificationTimeoutRef = useRef(null);
+
+  // Site wellbeing initialization
+  const initializeSiteWellbeing = useCallback(() => {
+    // Check preferred theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('duaaxis-theme');
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // Initialize reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    }
+
+    // Check if user has previously interacted with chat
+    const hasChatHistory = localStorage.getItem('duaaxis-chat-history');
+    if (hasChatHistory) {
+      setChatHistory(JSON.parse(hasChatHistory));
+    }
+  }, []);
+
+  // Initialize chat with welcome message when opened
+  useEffect(() => {
+    if (chatState !== CHAT_STATES.MINIMIZED && chatMessages.length === 0) {
+      const welcomeMessage = {
+        id: Date.now(),
+        text: "Hello! I'm Sarah, your solar energy consultant at DuaAxis. I can help you with:\n\n• Product information & features\n• Pricing & financing options\n• Installation process & timeline\n• System benefits & efficiency\n• Maintenance & support\n\nHow can I assist you with solar tracking today? 🌞",
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setChatMessages([welcomeMessage]);
+    }
+  }, [chatState, chatMessages.length]);
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages, isTyping]);
 
   // Enhanced initialization
   useEffect(() => {
@@ -44,7 +146,6 @@ const Home = () => {
     
     const timer = setTimeout(() => {
       setIsLoading(false);
-      // Show welcome notification after load
       showSystemNotification('Welcome to DuaAxis!', 'Discover solar tracking excellence', 'info');
     }, 1500);
 
@@ -66,7 +167,6 @@ const Home = () => {
       }
     };
 
-    // Network status monitoring
     const handleOnline = () => {
       setIsOnline(true);
       showSystemNotification('You are back online', 'Connection restored', 'success');
@@ -89,55 +189,119 @@ const Home = () => {
       clearTimeout(messagingTimeoutRef.current);
       clearTimeout(notificationTimeoutRef.current);
     };
+  }, [initializeSiteWellbeing]);
+
+  // AI Response Generator
+  const generateAIResponse = useCallback((userMessage) => {
+    const message = userMessage.toLowerCase();
+    
+    // Check for matching categories
+    for (const [category, data] of Object.entries(AI_RESPONSES)) {
+      if (category === 'DEFAULT') continue;
+      
+      const hasMatch = data.patterns.some(pattern => message.includes(pattern));
+      if (hasMatch) {
+        const randomResponse = data.responses[Math.floor(Math.random() * data.responses.length)];
+        return randomResponse;
+      }
+    }
+    
+    // Fallback to default response
+    const defaultResponse = AI_RESPONSES.DEFAULT.responses[
+      Math.floor(Math.random() * AI_RESPONSES.DEFAULT.responses.length)
+    ];
+    return defaultResponse;
   }, []);
 
-  // Site wellbeing initialization
-  const initializeSiteWellbeing = () => {
-    // Check preferred theme
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedTheme = localStorage.getItem('duaaxis-theme');
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      document.documentElement.classList.add('dark');
-    }
-
-    // Initialize reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      document.documentElement.classList.add('reduce-motion');
-    }
+  // Chat state management
+  const openChat = () => {
+    setChatState(CHAT_STATES.OPEN);
+    setUnreadMessages(0);
   };
 
-  // Enhanced messaging system
-  const showMessagingFeature = (feature) => {
-    setActiveMessaging(feature);
-    // Auto-hide after 30 seconds of inactivity
-    clearTimeout(messagingTimeoutRef.current);
-    messagingTimeoutRef.current = setTimeout(() => {
-      setActiveMessaging(null);
-    }, 30000);
+  const maximizeChat = () => {
+    setChatState(CHAT_STATES.MAXIMIZED);
+  };
+
+  const minimizeChat = () => {
+    setChatState(CHAT_STATES.OPEN);
+  };
+
+  const closeChat = () => {
+    setChatState(CHAT_STATES.MINIMIZED);
+  };
+
+  const toggleChat = () => {
+    if (chatState === CHAT_STATES.MINIMIZED) {
+      openChat();
+    } else {
+      closeChat();
+    }
   };
 
   const showSystemNotification = (title, message, type = 'info') => {
     setSystemNotification({ title, message, type, id: Date.now() });
-    
     clearTimeout(notificationTimeoutRef.current);
     notificationTimeoutRef.current = setTimeout(() => {
       setSystemNotification(null);
     }, 5000);
   };
 
-  const startLiveChat = () => {
-    showMessagingFeature(MESSAGING_FEATURES.LIVE_CHAT);
-    setUnreadMessages(0);
-    // Simulate initial message
+  const sendMessage = async () => {
+    if (!userInput.trim()) return;
+
+    // Add user message
+    const userMessage = {
+      id: Date.now(),
+      text: userInput,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    setIsTyping(true);
+
+    // Simulate AI thinking
     setTimeout(() => {
-      setUnreadMessages(prev => prev + 1);
-    }, 1000);
+      const aiResponse = generateAIResponse(userInput);
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: aiResponse,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      
+      setChatMessages(prev => [...prev, aiMessage]);
+      setIsTyping(false);
+      
+      // Add to chat history for context
+      const newChatHistory = [...chatHistory, { user: userInput, ai: aiResponse }];
+      setChatHistory(newChatHistory);
+      localStorage.setItem('duaaxis-chat-history', JSON.stringify(newChatHistory));
+    }, 1500 + Math.random() * 1000);
   };
 
-  const scheduleAppointment = () => {
-    showMessagingFeature(MESSAGING_FEATURES.APPOINTMENT);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const quickReplies = [
+    "How much does it cost?",
+    "What's the installation time?",
+    "Tell me about benefits",
+    "Maintenance requirements?",
+    "Speak to human expert"
+  ];
+
+  const handleQuickReply = (reply) => {
+    setUserInput(reply);
+    setTimeout(() => {
+      sendMessage();
+    }, 100);
   };
 
   // Enhanced scroll functions
@@ -191,7 +355,7 @@ const Home = () => {
 
   return (
     <div className="pt-16 relative min-h-screen bg-gradient-to-br from-white via-gray-50 to-primary-50/30">
-      {/* Enhanced Floating Navigation */}
+      {/* Floating Navigation */}
       <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block">
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-3 border border-white/20">
           <div className="space-y-3">
@@ -221,9 +385,7 @@ const Home = () => {
         <div 
           className="h-full bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 transition-all duration-500 ease-out shadow-lg"
           style={{ 
-            width: `${(navItems.findIndex(item => item.id === activeSection) + 1) / navItems.length * 100}%`,
-            backgroundSize: '200% 100%',
-            animation: 'gradientShift 3s ease infinite'
+            width: `${(navItems.findIndex(item => item.id === activeSection) + 1) / navItems.length * 100}%`
           }}
         />
       </div>
@@ -267,79 +429,297 @@ const Home = () => {
                 info@duaaxis.com
               </a>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Live Chat Widget - Minimized State */}
+      {chatState === CHAT_STATES.MINIMIZED && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="relative">
             <button 
-              onClick={scheduleAppointment}
-              className="mt-3 w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
+              onClick={toggleChat}
+              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-4 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl group"
             >
-              Schedule Call
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {unreadMessages}
+                </span>
+              )}
+              <div className="absolute inset-0 rounded-2xl bg-white/20 animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
             </button>
+            
+            <div className="absolute -top-1 -left-1">
+              <div className={`w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Enhanced Live Chat Widget */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <div className="relative">
-          <button 
-            onClick={startLiveChat}
-            className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-4 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl group"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                {unreadMessages}
-              </span>
-            )}
-            <div className="absolute inset-0 rounded-2xl bg-white/20 animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-          </button>
-          
-          {/* Chat status indicator */}
-          <div className="absolute -top-1 -left-1">
-            <div className={`w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Messaging Features */}
-      {activeMessaging === MESSAGING_FEATURES.LIVE_CHAT && (
-        <div className="fixed bottom-24 right-6 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 z-50 animate-in slide-in-from-bottom duration-500">
-          <div className="p-4 border-b border-gray-200">
+      {/* Live Chat Interface - Open State */}
+      {chatState === CHAT_STATES.OPEN && (
+        <div className="fixed bottom-24 right-6 w-80 sm:w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 z-50 animate-in slide-in-from-bottom duration-500">
+          <div className="p-4 border-b border-gray-200/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h3 className="font-bold text-gray-900">Live Chat</h3>
+                <div className="relative">
+                  <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">SA</span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Sarah - Solar Expert</h3>
+                  <p className="text-xs text-green-600">Online • Ready to help</p>
+                </div>
               </div>
-              <button 
-                onClick={() => setActiveMessaging(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+              <div className="flex items-center space-x-1">
+                <button 
+                  onClick={maximizeChat}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  title="Maximize"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={closeChat}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  title="Minimize"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <div 
+            ref={chatContainerRef}
+            className="p-4 max-h-80 overflow-y-auto space-y-4"
+          >
+            {chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+                <div
+                  className={`max-w-[80%] rounded-2xl p-3 ${
+                    message.sender === 'user'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-none'
+                      : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  <p className={`text-xs mt-1 ${
+                    message.sender === 'user' ? 'text-primary-100' : 'text-gray-500'
+                  }`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-bl-none p-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="p-4 max-h-60 overflow-y-auto">
-            <div className="space-y-3">
-              <div className="bg-primary-100 rounded-2xl rounded-tl-none p-3">
-                <p className="text-sm text-gray-800">Hello! I'm Sarah, your solar energy consultant. How can I help you today?</p>
+
+          {/* Quick Replies */}
+          {chatMessages.length <= 2 && (
+            <div className="px-4 pb-2">
+              <div className="flex flex-wrap gap-2">
+                {quickReplies.map((reply, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickReply(reply)}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors duration-200"
+                  >
+                    {reply}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-          <div className="p-4 border-t border-gray-200">
+          )}
+
+          {/* Input Area */}
+          <div className="p-4 border-t border-gray-200/60">
             <div className="flex space-x-2">
-              <input 
-                type="text" 
-                placeholder="Type your message..."
-                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-              <button className="bg-primary-600 hover:bg-primary-700 text-white p-2 rounded-xl transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
+              <div className="flex-1 relative">
+                <textarea
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  rows="1"
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none pr-10"
+                  style={{ minHeight: '40px', maxHeight: '100px' }}
+                />
+                <button 
+                  onClick={sendMessage}
+                  disabled={!userInput.trim()}
+                  className={`absolute right-2 bottom-2 p-1 rounded-lg transition-colors ${
+                    userInput.trim() 
+                      ? 'bg-primary-600 hover:bg-primary-700 text-white' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Typically replies in seconds • AI-powered assistance
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Live Chat Interface - Maximized State */}
+      {chatState === CHAT_STATES.MAXIMIZED && (
+        <div className="fixed inset-4 sm:inset-10 lg:inset-20 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 z-50 animate-in zoom-in duration-500">
+          <div className="flex flex-col h-full">
+            <div className="p-4 border-b border-gray-200/60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-lg">SA</span>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">Sarah - Solar Energy Consultant</h3>
+                    <p className="text-sm text-green-600">Online • Ready to help with all your solar questions</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={minimizeChat}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+                    title="Restore"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={closeChat}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+                    title="Close"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Messages - Maximized */}
+            <div 
+              ref={chatContainerRef}
+              className="flex-1 p-6 overflow-y-auto space-y-4"
+            >
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[70%] rounded-2xl p-4 ${
+                      message.sender === 'user'
+                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-br-none'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                    }`}
+                  >
+                    <p className="text-base whitespace-pre-wrap">{message.text}</p>
+                    <p className={`text-sm mt-2 ${
+                      message.sender === 'user' ? 'text-primary-100' : 'text-gray-500'
+                    }`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-bl-none p-4">
+                    <div className="flex space-x-2">
+                      <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Replies - Maximized */}
+            {chatMessages.length <= 2 && (
+              <div className="px-6 pb-4">
+                <div className="flex flex-wrap gap-3">
+                  {quickReplies.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickReply(reply)}
+                      className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full transition-colors duration-200"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Input Area - Maximized */}
+            <div className="p-6 border-t border-gray-200/60">
+              <div className="flex space-x-3">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message about solar energy, pricing, installation, or anything else..."
+                    rows="2"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none pr-12"
+                    style={{ minHeight: '60px', maxHeight: '120px' }}
+                  />
+                  <button 
+                    onClick={sendMessage}
+                    disabled={!userInput.trim()}
+                    className={`absolute right-3 bottom-3 p-2 rounded-lg transition-colors ${
+                      userInput.trim() 
+                        ? 'bg-primary-600 hover:bg-primary-700 text-white' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 text-center mt-3">
+                AI-powered solar energy assistance • Typically replies in seconds
+              </p>
             </div>
           </div>
         </div>
@@ -426,13 +806,6 @@ const Home = () => {
           <Contact />
         </div>
       </div>
-
-      {/* Enhanced Cookie Consent Banner (from previous implementation) */}
-      {showCookieBanner && (
-        <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 z-50 animate-in slide-in-from-bottom duration-500">
-          {/* ... cookie banner content from previous implementation ... */}
-        </div>
-      )}
 
       <style jsx>{`
         @keyframes gradientShift {
